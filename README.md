@@ -1,5 +1,7 @@
 # Aura Clock Screensaver ⏳💫
 
+![Aura Clock](url('https://i.ibb.co/HN9TWzW/aurascreen.png'))
+
 O **Aura Clock Screensaver** é uma tela de descanso com temas de cores inspirados em ambientes místicos, trazendo uma experiência visual única e encantadora. Um dos temas é o **Twilight**, que faz parte da coleção de temas do **Aura Clock Screensaver**. Ele apresenta um **gradiente de alta resolução com textura granulada**, criando uma atmosfera envolvente e relaxante. Além disso, oferece dois modos de exibição de horário: 12 horas com AM/PM e 24 horas.
 
 ## 🌙✨ Funcionalidades
