@@ -34,6 +34,28 @@ body {
     text-shadow: 0 0 20px rgba(255, 255, 255, 0.658)
 }
 
+/* Botão Fullscreen */
+#toggle-fullscreen {
+    position: absolute;
+    bottom: 80px;
+    left: 20px;
+    background-color: rgba(255, 255, 255, 0.8);
+    font-size: 1.2rem;
+    font-weight: bold;
+    padding: 10px 20px;
+}
+
+/* Botão Pomodoro */
+#start-pomodoro {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    background-color: rgba(200, 157, 209, 0.8);
+    font-size: 1.2rem;
+    font-weight: bold;
+    padding: 10px 20px;
+}
+
 
 .controls {
     position: absolute;
