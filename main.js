@@ -17,7 +17,7 @@ function atualizarRelogio() {
         horas = horas % 12 || 12;
     }
 
-    horas = String(horas).padStart(2, '0');
+    horas = String(horas);
     minutos = String(minutos).padStart(2, '0');
 
     document.getElementById("clock").innerHTML = `${horas}:${minutos} ${ampm}`;
