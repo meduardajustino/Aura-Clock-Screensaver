@@ -21,7 +21,10 @@
             <option value="imagens/aura_6.jpg">Aura 6</option>
         </select>
         <button id="fullscreen-toggle">Tela Cheia</button>
-        <button id="pomodoro-toggle">Pomodoro 45min</button>
+        
+        <label>Foco (min): <input type="number" id="foco-minutos" value="45" min="1" max="180"></label>
+        <label>Pausa (min): <input type="number" id="pausa-minutos" value="10" min="1" max="60"></label>
+        <button id="pomodoro-toggle">Pomodoro</button>
     </div>
 
     <script src="main.js" defer></script>
