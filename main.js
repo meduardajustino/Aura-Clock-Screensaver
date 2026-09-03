@@ -171,10 +171,6 @@ function desenharPip(segundosRestantes) {
         pipCtx.fillRect(0, 0, pipCanvas.width, pipCanvas.height);
     }
 
-    // leve véu escuro por cima da imagem, só pra garantir contraste do texto
-    pipCtx.fillStyle = 'rgba(0, 0, 0, 0.25)';
-    pipCtx.fillRect(0, 0, pipCanvas.width, pipCanvas.height);
-
     // apenas o tempo restante, sem "Foco"/"Pausa"
     pipCtx.fillStyle = '#ffffff';
     pipCtx.font = "600 64px system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif";
