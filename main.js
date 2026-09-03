@@ -1,10 +1,12 @@
 let is24HourFormat = true;
-let isFullscreen = false;
 let isPomodoroActive = false;
 let pomodoroInterval;
-let remainingTime;
+let endTime;              // timestamp (ms) de quando o ciclo atual termina
+let currentPhase = 'foco'; // 'foco' ou 'pausa'
 let focoMinutos = 45;
 let pausaMinutos = 10;
+
+let pipCanvas, pipCtx, pipVideo;
 
 function atualizarRelogio() {
     if (isPomodoroActive) return;
@@ -27,6 +29,12 @@ function toggleFullscreen() {
     } else {
         document.exitFullscreen();
     }
+}
+
+function formatarTempo(segundosTotais) {
+    const minutos = Math.floor(segundosTotais / 60);
+    const segundos = segundosTotais % 60;
+    return `${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
 }
 
 function pararPomodoro() {
@@ -56,40 +64,104 @@ function iniciarPomodoro() {
 }
 
 function iniciarCicloFoco() {
-    remainingTime = focoMinutos * 60;
+    currentPhase = 'foco';
+    endTime = Date.now() + focoMinutos * 60 * 1000;
     document.getElementById("pomodoro-toggle").textContent = "Parar Pomodoro";
-    pomodoroInterval = setInterval(() => {
-        if (remainingTime > 0) {
-            remainingTime--;
-            const minutos = Math.floor(remainingTime / 60);
-            const segundos = remainingTime % 60;
-            document.getElementById("clock").innerHTML =
-                `${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
-        } else {
-            clearInterval(pomodoroInterval);
-            alert(`Foco concluído! Você tem ${pausaMinutos} minutos de descanso.`);
-            iniciarPausa();
-        }
-    }, 1000);
+    rodarCiclo();
 }
 
 function iniciarPausa() {
-    remainingTime = pausaMinutos * 60;
-    pomodoroInterval = setInterval(() => {
-        if (remainingTime > 0) {
-            remainingTime--;
-            const minutos = Math.floor(remainingTime / 60);
-            const segundos = remainingTime % 60;
-            document.getElementById("clock").innerHTML =
-                `${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
+    currentPhase = 'pausa';
+    endTime = Date.now() + pausaMinutos * 60 * 1000;
+    rodarCiclo();
+}
+
+function rodarCiclo() {
+    clearInterval(pomodoroInterval);
+    atualizarDisplayCiclo(); // atualiza na hora, sem esperar o primeiro tick
+    pomodoroInterval = setInterval(atualizarDisplayCiclo, 1000);
+}
+
+// Em vez de decrementar um contador, recalcula o tempo restante a partir
+// de um horário absoluto de término. Isso evita o atraso acumulado que o
+// navegador introduz quando a aba está em segundo plano/minimizada.
+function atualizarDisplayCiclo() {
+    const restante = Math.round((endTime - Date.now()) / 1000);
+
+    if (restante > 0) {
+        document.getElementById("clock").innerHTML = formatarTempo(restante);
+        desenharPip(restante);
+    } else {
+        clearInterval(pomodoroInterval);
+        if (currentPhase === 'foco') {
+            alert(`Foco concluído! Hora da pausa de ${pausaMinutos} minutos!`);
+            iniciarPausa();
         } else {
-            clearInterval(pomodoroInterval);
-            alert("Pausa finalizada! Começando outro ciclo de estudos.");
+            alert("Pausa finalizada! Começando outro ciclo de foco.");
             if (isPomodoroActive) {
                 iniciarCicloFoco(); // faz o loop automaticamente
             }
         }
-    }, 1000);
+    }
+}
+
+/* ---------- Picture-in-Picture ---------- */
+
+function configurarPip() {
+    pipCanvas = document.createElement('canvas');
+    pipCanvas.width = 320;
+    pipCanvas.height = 180;
+    pipCtx = pipCanvas.getContext('2d');
+
+    pipVideo = document.createElement('video');
+    pipVideo.muted = true;
+    pipVideo.playsInline = true;
+    pipVideo.style.display = 'none';
+    document.body.appendChild(pipVideo);
+
+    const stream = pipCanvas.captureStream(2); // 2 fps é mais que suficiente pra um relógio
+    pipVideo.srcObject = stream;
+
+    // desenha algo assim que configura, mesmo antes do pomodoro começar
+    desenharPip(focoMinutos * 60);
+}
+
+function desenharPip(segundosRestantes) {
+    if (!pipCtx) return;
+
+    pipCtx.fillStyle = '#6d3f66';
+    pipCtx.fillRect(0, 0, pipCanvas.width, pipCanvas.height);
+
+    pipCtx.fillStyle = '#ffebf5';
+    pipCtx.font = 'bold 60px system-ui, sans-serif';
+    pipCtx.textAlign = 'center';
+    pipCtx.textBaseline = 'middle';
+    pipCtx.fillText(formatarTempo(segundosRestantes), pipCanvas.width / 2, pipCanvas.height / 2 - 10);
+
+    pipCtx.font = '20px system-ui, sans-serif';
+    pipCtx.fillText(currentPhase === 'foco' ? 'Foco' : 'Pausa', pipCanvas.width / 2, pipCanvas.height / 2 + 40);
+}
+
+async function abrirPip() {
+    if (!pipVideo) configurarPip();
+
+    if (!isPomodoroActive) {
+        alert("Inicie o Pomodoro antes de abrir o Picture-in-Picture.");
+        return;
+    }
+
+    if (!document.pictureInPictureEnabled) {
+        alert("Seu navegador não suporta Picture-in-Picture.");
+        return;
+    }
+
+    try {
+        await pipVideo.play();
+        await pipVideo.requestPictureInPicture();
+    } catch (err) {
+        console.error("Erro ao abrir Picture-in-Picture:", err);
+        alert("Não foi possível abrir o Picture-in-Picture.");
+    }
 }
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -99,9 +171,18 @@ window.addEventListener('DOMContentLoaded', () => {
     });
     document.getElementById("fullscreen-toggle").addEventListener("click", toggleFullscreen);
     document.getElementById("pomodoro-toggle").addEventListener("click", iniciarPomodoro);
+    document.getElementById("pip-toggle").addEventListener("click", abrirPip);
     document.getElementById("background-selector").addEventListener("change", (e) => {
         document.body.style.backgroundImage = `url('${e.target.value}')`;
     });
+
+    // Corrige o display evitando que o usuário veja um número "atrasado" por causa do throttling.
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && isPomodoroActive) {
+            atualizarDisplayCiclo();
+        }
+    });
+
     setInterval(atualizarRelogio, 1000);
     atualizarRelogio();
 });
